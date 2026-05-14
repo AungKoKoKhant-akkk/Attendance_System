@@ -85,23 +85,36 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
 
         List<Student> allStudentsInClass = studentRepository.findByClassSection(session.getClassSection());
 
-        List<AttendanceRecord> presentRecords = attendanceRecordRepository.findBySessionId(sessionId);
+        List<AttendanceRecord> allRecords = attendanceRecordRepository.findBySessionId(sessionId);
 
-        Set<Long> presentStudentIds = presentRecords.stream()
-                .map(record -> record.getStudent().getId())
-                .collect(Collectors.toSet());
+        List<AttendanceRecord> presentRecords = allRecords.stream()
+                .filter(record -> record.getStatus() == AttendanceStatus.PRESENT)
+                .toList();
 
-        List<Student> absentStudents = allStudentsInClass.stream()
-                .filter(student -> !presentStudentIds.contains(student.getId()))
+        List<AttendanceRecord> absentRecords = allRecords.stream()
+                .filter(record -> record.getStatus() == AttendanceStatus.ABSENT)
                 .toList();
 
         List<AttendanceRecordResponse> presentStudentResponses = presentRecords.stream()
                 .map(this::mapToResponse)
                 .toList();
 
-        List<StudentResponse> absentStudentResponses = absentStudents.stream()
-                .map(this::mapStudentToResponse)
-                .toList();
+        List<StudentResponse> absentStudentResponses;
+
+        if (!absentRecords.isEmpty()) {
+            absentStudentResponses = absentRecords.stream()
+                    .map(record -> mapStudentToResponse(record.getStudent()))
+                    .toList();
+        } else {
+            Set<Long> presentStudentIds = presentRecords.stream()
+                    .map(record -> record.getStudent().getId())
+                    .collect(Collectors.toSet());
+
+            absentStudentResponses = allStudentsInClass.stream()
+                    .filter(student -> !presentStudentIds.contains(student.getId()))
+                    .map(this::mapStudentToResponse)
+                    .toList();
+        }
 
         return AttendanceSummaryResponse.builder()
                 .sessionId(session.getId())

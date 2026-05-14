@@ -41,6 +41,8 @@ public class AttendanceSession {
 
     private LocalTime endTime;
 
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SessionStatus status;

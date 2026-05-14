@@ -2,9 +2,14 @@ package com.school.attendance_system.service.impl;
 
 import com.school.attendance_system.dto.request.AttendanceSessionRequest;
 import com.school.attendance_system.dto.response.AttendanceSessionResponse;
+import com.school.attendance_system.entity.AttendanceRecord;
 import com.school.attendance_system.entity.AttendanceSession;
+import com.school.attendance_system.entity.Student;
+import com.school.attendance_system.enums.AttendanceStatus;
 import com.school.attendance_system.enums.SessionStatus;
+import com.school.attendance_system.repository.AttendanceRecordRepository;
 import com.school.attendance_system.repository.AttendanceSessionRepository;
+import com.school.attendance_system.repository.StudentRepository;
 import com.school.attendance_system.service.AttendanceSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AttendanceSessionServiceImpl implements AttendanceSessionService {
     private final AttendanceSessionRepository attendanceSessionRepository;
+    private final StudentRepository studentRepository;
+    private final AttendanceRecordRepository attendanceRecordRepository;
 
     @Override
     public AttendanceSessionResponse startSession(AttendanceSessionRequest request) {
@@ -75,6 +82,27 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    private void saveAbsentStudents(AttendanceSession session){
+        List<Student> studentsInClass = studentRepository.findByClassSection(session.getClassSection());
+
+        for(Student student : studentsInClass){
+            boolean alreadyMarked = attendanceRecordRepository
+                    .existsBySessionIdAndStudentId(session.getId(), student.getId());
+
+            if(!alreadyMarked){
+                AttendanceRecord absentRecord = AttendanceRecord.builder()
+                        .session(session)
+                        .student(student)
+                        .status(AttendanceStatus.ABSENT)
+                        .checkInTime(null)
+                        .confidenceScore(null)
+                        .markedBy("SYSTEM")
+                        .build();
+                attendanceRecordRepository.save(absentRecord);
+            }
+        }
     }
 
     private AttendanceSessionResponse mapToResponse(AttendanceSession session) {

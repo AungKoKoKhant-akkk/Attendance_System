@@ -10,4 +10,8 @@ public interface AttendanceSessionRepository extends JpaRepository<AttendanceSes
     List<AttendanceSession> findByStatus(SessionStatus status);
 
     List<AttendanceSession> findByClassSection(String classSection);
+
+
+
+
 }
