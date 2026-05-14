@@ -41,7 +41,7 @@ public class AttendanceSession {
 
     private LocalTime endTime;
 
-
+    private Integer lateAfterMinutes;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

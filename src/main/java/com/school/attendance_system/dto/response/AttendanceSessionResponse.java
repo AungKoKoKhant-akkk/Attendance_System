@@ -18,6 +18,7 @@ public class AttendanceSessionResponse {
     private LocalDate sessionDate;
     private LocalTime startTime;
     private LocalTime endTime;
+    private Integer lateAfterMinutes;
     private SessionStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

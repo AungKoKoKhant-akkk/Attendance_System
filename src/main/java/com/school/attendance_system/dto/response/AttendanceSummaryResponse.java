@@ -14,6 +14,7 @@ public class AttendanceSummaryResponse {
     private int totalStudents;
     private int presentCount;
     private int absentCount;
+    private int lateCount;
     private List<AttendanceRecordResponse> presentStudents;
     private List<StudentResponse> absentStudents;
 

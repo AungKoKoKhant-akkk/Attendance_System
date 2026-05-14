@@ -47,11 +47,15 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
             throw new RuntimeException("Attendance already marked for student: " + student.getStudentCode());
         }
 
+        LocalTime checkInTime = LocalTime.now();
+
+        AttendanceStatus status = calculateAttendanceStatus(session, checkInTime);
+
         AttendanceRecord attendanceRecord = AttendanceRecord.builder()
                 .session(session)
                 .student(student)
-                .status(AttendanceStatus.PRESENT)
-                .checkInTime(LocalTime.now())
+                .status(status)
+                .checkInTime(checkInTime)
                 .confidenceScore(null)
                 .markedBy("MANUAL")
                 .build();
@@ -88,11 +92,18 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
         List<AttendanceRecord> allRecords = attendanceRecordRepository.findBySessionId(sessionId);
 
         List<AttendanceRecord> presentRecords = allRecords.stream()
-                .filter(record -> record.getStatus() == AttendanceStatus.PRESENT)
+                .filter(record ->
+                        record.getStatus() == AttendanceStatus.PRESENT
+                                || record.getStatus() == AttendanceStatus.LATE
+                )
                 .toList();
 
         List<AttendanceRecord> absentRecords = allRecords.stream()
                 .filter(record -> record.getStatus() == AttendanceStatus.ABSENT)
+                .toList();
+
+        List<AttendanceRecord> lateRecords = allRecords.stream()
+                .filter(record -> record.getStatus() == AttendanceStatus.LATE)
                 .toList();
 
         List<AttendanceRecordResponse> presentStudentResponses = presentRecords.stream()
@@ -125,6 +136,7 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
                 .absentCount(absentStudentResponses.size())
                 .presentStudents(presentStudentResponses)
                 .absentStudents(absentStudentResponses)
+                .lateCount(lateRecords.size())
                 .build();
     }
 
@@ -157,6 +169,23 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
                 .createdAt(student.getCreatedAt())
                 .updatedAt(student.getUpdatedAt())
                 .build();
+    }
+
+    private AttendanceStatus calculateAttendanceStatus(AttendanceSession session, LocalTime checkInTime) {
+
+        Integer lateAfterMinutes = session.getLateAfterMinutes();
+
+        if (lateAfterMinutes == null) {
+            lateAfterMinutes = 10;
+        }
+
+        LocalTime lateLimitTime = session.getStartTime().plusMinutes(lateAfterMinutes);
+
+        if (checkInTime.isAfter(lateLimitTime)) {
+            return AttendanceStatus.LATE;
+        }
+
+        return AttendanceStatus.PRESENT;
     }
 
 }

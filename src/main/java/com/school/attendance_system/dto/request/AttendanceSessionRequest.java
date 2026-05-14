@@ -15,4 +15,6 @@ public class AttendanceSessionRequest {
     // For now, we manually send teacherId.
     // Later, we will get teacherId from logged-in user.
     private Long teacherId;
+
+    private Integer lateAfterMinutes;
 }

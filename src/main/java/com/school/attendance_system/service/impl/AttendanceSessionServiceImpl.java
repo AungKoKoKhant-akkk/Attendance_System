@@ -34,6 +34,11 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
                 .teacherId(request.getTeacherId())
                 .sessionDate(LocalDate.now())
                 .startTime(LocalTime.now())
+                .lateAfterMinutes(
+                        request.getLateAfterMinutes() != null
+                                ? request.getLateAfterMinutes()
+                                : 10
+                )
                 .status(SessionStatus.ACTIVE)
                 .build();
 
@@ -114,6 +119,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
                 .sessionDate(session.getSessionDate())
                 .startTime(session.getStartTime())
                 .endTime(session.getEndTime())
+                .lateAfterMinutes(session.getLateAfterMinutes())
                 .status(session.getStatus())
                 .createdAt(session.getCreatedAt())
                 .updatedAt(session.getUpdatedAt())
