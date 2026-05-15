@@ -46,6 +46,12 @@ public class AttendanceRecord {
     // Later: AI, TEACHER_CORRECTION
     private String markedBy;
 
+    private String correctedBy;
+
+    private String correctionReason;
+
+    private LocalDateTime correctedAt;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

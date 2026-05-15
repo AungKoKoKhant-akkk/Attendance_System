@@ -1,5 +1,6 @@
 package com.school.attendance_system.controller;
 
+import com.school.attendance_system.dto.request.AttendanceCorrectionRequest;
 import com.school.attendance_system.dto.request.ManualAttendanceRequest;
 import com.school.attendance_system.dto.response.AttendanceRecordResponse;
 import com.school.attendance_system.dto.response.AttendanceSummaryResponse;
@@ -44,5 +45,10 @@ public class AttendanceRecordController {
             @PathVariable Long studentId
     ) {
         return attendanceRecordService.getAttendanceByStudent(studentId);
+    }
+
+    @PutMapping("/{recordId}/correct")
+    public AttendanceRecordResponse correctAttendance(@PathVariable Long recordId, @Valid @RequestBody AttendanceCorrectionRequest request){
+        return attendanceRecordService.correctAttendance(recordId, request);
     }
 }

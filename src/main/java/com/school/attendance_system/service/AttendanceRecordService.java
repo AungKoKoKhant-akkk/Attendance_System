@@ -1,5 +1,6 @@
 package com.school.attendance_system.service;
 
+import com.school.attendance_system.dto.request.AttendanceCorrectionRequest;
 import com.school.attendance_system.dto.request.ManualAttendanceRequest;
 import com.school.attendance_system.dto.response.AttendanceRecordResponse;
 import com.school.attendance_system.dto.response.AttendanceSummaryResponse;
@@ -14,4 +15,6 @@ public interface AttendanceRecordService {
     List<AttendanceRecordResponse> getAttendanceByStudent(Long studentId);
 
     AttendanceSummaryResponse getAttendanceSummary(Long sessionId);
+
+    AttendanceRecordResponse correctAttendance(Long recordId, AttendanceCorrectionRequest request);
 }

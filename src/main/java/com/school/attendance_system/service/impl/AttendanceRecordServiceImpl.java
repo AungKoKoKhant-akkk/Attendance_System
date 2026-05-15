@@ -1,5 +1,6 @@
 package com.school.attendance_system.service.impl;
 
+import com.school.attendance_system.dto.request.AttendanceCorrectionRequest;
 import com.school.attendance_system.dto.request.ManualAttendanceRequest;
 import com.school.attendance_system.dto.response.AttendanceRecordResponse;
 import com.school.attendance_system.dto.response.AttendanceSummaryResponse;
@@ -82,6 +83,30 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
     }
 
     @Override
+    public AttendanceRecordResponse correctAttendance(Long recordId, AttendanceCorrectionRequest request) {
+        AttendanceRecord record = attendanceRecordRepository.findById(recordId)
+                .orElseThrow(()-> new RuntimeException("Attendance record not found with id: " + recordId));
+        record.setStatus(request.getStatus());
+        record.setMarkedBy("TEACHER_CORRECTION");
+        record.setCorrectionReason(request.getReason());
+        record.setCorrectedBy(request.getCorrectedBy() !=null && !request.getCorrectedBy().isBlank()
+        ? request.getCorrectedBy() : "Teacher");
+
+        if((request.getStatus() == AttendanceStatus.PRESENT || request.getStatus() == AttendanceStatus.LATE) && record.getCheckInTime() == null){
+            record.setCheckInTime(LocalTime.now());
+        }
+
+        // If teacher changes to ABSENT or EXCUSED, check-in time should usually be empty.
+        if (request.getStatus() == AttendanceStatus.ABSENT || request.getStatus() == AttendanceStatus.EXCUSED) {
+            record.setCheckInTime(null);
+        }
+
+        AttendanceRecord updatedRecord = attendanceRecordRepository.save(record);
+
+        return mapToResponse(updatedRecord);
+    }
+
+    @Override
     public AttendanceSummaryResponse getAttendanceSummary(Long sessionId) {
 
         AttendanceSession session = attendanceSessionRepository.findById(sessionId)
@@ -127,6 +152,8 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
                     .toList();
         }
 
+
+
         return AttendanceSummaryResponse.builder()
                 .sessionId(session.getId())
                 .classSection(session.getClassSection())
@@ -154,6 +181,9 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
                 .checkInTime(record.getCheckInTime())
                 .confidenceScore(record.getConfidenceScore())
                 .markedBy(record.getMarkedBy())
+                .correctedBy(record.getCorrectedBy())
+                .correctionReason(record.getCorrectionReason())
+                .correctedAt(record.getCorrectedAt())
                 .createdAt(record.getCreatedAt())
                 .updatedAt(record.getUpdatedAt())
                 .build();
