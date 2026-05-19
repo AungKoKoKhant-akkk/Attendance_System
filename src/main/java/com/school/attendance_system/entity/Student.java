@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long studentId;
 
     @Column(nullable = false, unique = true)
     private String studentCode;
@@ -25,25 +25,31 @@ public class Student {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String classSection;
 
     private String faceImagePath;
 
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean faceRegistered = false;
 
     private LocalDateTime createdAt;
 
-    // This method runs before saving a new student
+    private LocalDateTime updatedAt;
+
     @PrePersist
     public void beforeCreate() {
         this.createdAt = LocalDateTime.now();
+
+        if (this.faceRegistered == null) {
+            this.faceRegistered = false;
+        }
     }
 
-    // This method runs before updating student data
     @PreUpdate
     public void beforeUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
 
 }

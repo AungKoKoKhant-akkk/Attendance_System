@@ -13,6 +13,7 @@ public class StudentResponse {
     private String name;
     private String classSection;
     private String faceImagePath;
+    private Boolean faceRegistered;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
