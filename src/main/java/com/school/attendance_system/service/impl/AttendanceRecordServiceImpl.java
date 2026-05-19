@@ -171,7 +171,7 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
         Student student = record.getStudent();
 
         return AttendanceRecordResponse.builder()
-                .id(record.getId())
+                .recordId(record.getId())
                 .sessionId(record.getSession().getId())
                 .studentId(student.getId())
                 .studentCode(student.getStudentCode())

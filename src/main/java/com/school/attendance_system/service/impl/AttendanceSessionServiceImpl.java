@@ -112,7 +112,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
     private AttendanceSessionResponse mapToResponse(AttendanceSession session) {
         return AttendanceSessionResponse.builder()
-                .id(session.getId())
+                .sessionId(session.getId())
                 .classSection(session.getClassSection())
                 .subjectName(session.getSubjectName())
                 .teacherId(session.getTeacherId())

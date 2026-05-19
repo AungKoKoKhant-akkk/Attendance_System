@@ -11,7 +11,7 @@ import java.time.LocalTime;
 @Data
 @Builder
 public class AttendanceSessionResponse {
-    private Long id;
+    private Long sessionId;
     private String classSection;
     private String subjectName;
     private Long teacherId;

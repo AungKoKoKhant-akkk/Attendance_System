@@ -10,7 +10,7 @@ import java.time.LocalTime;
 @Data
 @Builder
 public class AttendanceRecordResponse {
-    private Long id;
+    private Long recordId;
 
     private Long sessionId;
 

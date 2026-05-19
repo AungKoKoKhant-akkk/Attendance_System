@@ -83,7 +83,7 @@ public class StudentServiceImpl implements StudentService {
 
     private StudentResponse mapToResponse(Student student) {
         return StudentResponse.builder()
-                .id(student.getId())
+                .studentId(student.getId())
                 .studentCode(student.getStudentCode())
                 .name(student.getName())
                 .classSection(student.getClassSection())
