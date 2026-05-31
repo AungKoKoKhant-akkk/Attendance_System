@@ -94,7 +94,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
         for(Student student : studentsInClass){
             boolean alreadyMarked = attendanceRecordRepository
-                    .existsBySessionIdAndStudentId(session.getId(), student.getId());
+                    .existsBySession_IdAndStudent_Id(session.getId(), student.getId());
 
             if(!alreadyMarked){
                 AttendanceRecord absentRecord = AttendanceRecord.builder()

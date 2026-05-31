@@ -2,13 +2,16 @@ package com.school.attendance_system.controller;
 
 import com.school.attendance_system.dto.request.AttendanceCorrectionRequest;
 import com.school.attendance_system.dto.request.ManualAttendanceRequest;
+import com.school.attendance_system.dto.response.AiAttendanceResponse;
 import com.school.attendance_system.dto.response.AttendanceRecordResponse;
 import com.school.attendance_system.dto.response.AttendanceSummaryResponse;
 import com.school.attendance_system.service.AttendanceRecordService;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,6 +27,17 @@ public class AttendanceRecordController {
             @Valid @RequestBody ManualAttendanceRequest request
     ) {
         return attendanceRecordService.markManualAttendance(request);
+    }
+
+    @PostMapping(
+            value = "/ai-mark",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public AiAttendanceResponse markAiAttendance(
+            @RequestParam("sessionId") Long sessionId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return attendanceRecordService.markAiAttendance(sessionId, file);
     }
 
     @GetMapping("/session/{sessionId}")
@@ -48,7 +62,10 @@ public class AttendanceRecordController {
     }
 
     @PutMapping("/{recordId}/correct")
-    public AttendanceRecordResponse correctAttendance(@PathVariable Long recordId, @Valid @RequestBody AttendanceCorrectionRequest request){
+    public AttendanceRecordResponse correctAttendance(
+            @PathVariable Long recordId,
+            @Valid @RequestBody AttendanceCorrectionRequest request
+    ) {
         return attendanceRecordService.correctAttendance(recordId, request);
     }
 }

@@ -44,6 +44,9 @@ public class SecurityConfig {
                         // Later, we can make this ADMIN only.
                         .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "TEACHER")
 
+                        //Ai-Face
+                        .requestMatchers("/api/ai-test/**").hasAnyRole("ADMIN", "TEACHER")
+
                         .anyRequest().authenticated()
                 )
 

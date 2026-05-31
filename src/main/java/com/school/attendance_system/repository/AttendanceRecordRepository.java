@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AttendanceRecordRepository extends JpaRepository<AttendanceRecord,Long> {
-    boolean existsBySessionIdAndStudentId(Long sessionId, Long studentId);
+    boolean existsBySession_IdAndStudent_Id(Long sessionId, Long studentId);
 
-    Optional<AttendanceRecord> findBySessionIdAndStudentId(Long sessionId, Long studentId);
+    Optional<AttendanceRecord> findBySession_IdAndStudent_Id(Long sessionId, Long studentId);
 
     List<AttendanceRecord> findBySessionId(Long sessionId);
 
     List<AttendanceRecord> findByStudentId(Long studentId);
 }
+

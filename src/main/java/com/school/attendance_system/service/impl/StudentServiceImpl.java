@@ -1,10 +1,12 @@
 package com.school.attendance_system.service.impl;
 
 import com.school.attendance_system.dto.request.StudentRequest;
+import com.school.attendance_system.dto.response.AiRegisterFaceResponse;
 import com.school.attendance_system.dto.response.FaceUploadResponse;
 import com.school.attendance_system.dto.response.StudentResponse;
 import com.school.attendance_system.entity.Student;
 import com.school.attendance_system.repository.StudentRepository;
+import com.school.attendance_system.service.AiFaceService;
 import com.school.attendance_system.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +24,10 @@ import java.util.List;
 
 public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
+    private final AiFaceService aiFaceService;
 
+    @Value("${app.file.upload-dir}")
+    private String uploadDir;
 
     @Override
     public StudentResponse createStudent(StudentRequest request) {
@@ -86,8 +91,6 @@ public class StudentServiceImpl implements StudentService {
         studentRepository.deleteById(id);
     }
 
-    @Value("${app.file.upload-dir}")
-    private final String uploadDir;
 
     @Override
     public FaceUploadResponse uploadStudentFace(String studentCode, MultipartFile file) {
@@ -104,6 +107,16 @@ public class StudentServiceImpl implements StudentService {
             throw new RuntimeException("Only image files are allowed");
         }
 
+        AiRegisterFaceResponse aiResponse = aiFaceService.registerFace(studentCode, file);
+
+        if(aiResponse == null){
+            throw new RuntimeException("AI service did not return response");
+        }
+
+        if(aiResponse.getSuccess() == null || !aiResponse.getSuccess()){
+            throw new RuntimeException("AI face registration failed: " + aiResponse.getMessage());
+        }
+
         try {
             Path uploadPath = Paths.get(uploadDir);
 
@@ -117,6 +130,8 @@ public class StudentServiceImpl implements StudentService {
             String fileName = student.getStudentCode() + "_" + System.currentTimeMillis() + extension;
 
             Path filePath = uploadPath.resolve(fileName);
+
+            byte[] bytes = file.getBytes();
 
             Files.copy(file.getInputStream(), filePath);
 
@@ -151,7 +166,7 @@ public class StudentServiceImpl implements StudentService {
 
     private StudentResponse mapToResponse(Student student) {
         return StudentResponse.builder()
-                .studentId(student.getStudentId())
+                .studentId(student.getId())
                 .studentCode(student.getStudentCode())
                 .name(student.getName())
                 .classSection(student.getClassSection())

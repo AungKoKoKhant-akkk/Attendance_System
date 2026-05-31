@@ -2,8 +2,10 @@ package com.school.attendance_system.service;
 
 import com.school.attendance_system.dto.request.AttendanceCorrectionRequest;
 import com.school.attendance_system.dto.request.ManualAttendanceRequest;
+import com.school.attendance_system.dto.response.AiAttendanceResponse;
 import com.school.attendance_system.dto.response.AttendanceRecordResponse;
 import com.school.attendance_system.dto.response.AttendanceSummaryResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,4 +19,6 @@ public interface AttendanceRecordService {
     AttendanceSummaryResponse getAttendanceSummary(Long sessionId);
 
     AttendanceRecordResponse correctAttendance(Long recordId, AttendanceCorrectionRequest request);
+
+    AiAttendanceResponse markAiAttendance(Long sessionId, MultipartFile file);
 }

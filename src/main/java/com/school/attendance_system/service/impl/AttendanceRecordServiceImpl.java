@@ -2,9 +2,7 @@ package com.school.attendance_system.service.impl;
 
 import com.school.attendance_system.dto.request.AttendanceCorrectionRequest;
 import com.school.attendance_system.dto.request.ManualAttendanceRequest;
-import com.school.attendance_system.dto.response.AttendanceRecordResponse;
-import com.school.attendance_system.dto.response.AttendanceSummaryResponse;
-import com.school.attendance_system.dto.response.StudentResponse;
+import com.school.attendance_system.dto.response.*;
 import com.school.attendance_system.entity.AttendanceRecord;
 import com.school.attendance_system.entity.AttendanceSession;
 import com.school.attendance_system.entity.Student;
@@ -13,13 +11,16 @@ import com.school.attendance_system.enums.SessionStatus;
 import com.school.attendance_system.repository.AttendanceRecordRepository;
 import com.school.attendance_system.repository.AttendanceSessionRepository;
 import com.school.attendance_system.repository.StudentRepository;
+import com.school.attendance_system.service.AiFaceService;
 import com.school.attendance_system.service.AttendanceRecordService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,7 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final AttendanceSessionRepository attendanceSessionRepository;
     private final StudentRepository studentRepository;
+    private final AiFaceService aiFaceService;
 
     @Override
     public AttendanceRecordResponse markManualAttendance(ManualAttendanceRequest request) {
@@ -44,7 +46,7 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
         Student student = studentRepository.findByStudentCode(request.getStudentCode())
                 .orElseThrow(() -> new RuntimeException("Student not found with code: " + request.getStudentCode()));
 
-        if (attendanceRecordRepository.existsBySessionIdAndStudentId(session.getId(), student.getId())) {
+        if (attendanceRecordRepository.existsBySession_IdAndStudent_Id(session.getId(), student.getId())) {
             throw new RuntimeException("Attendance already marked for student: " + student.getStudentCode());
         }
 
@@ -167,6 +169,80 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
                 .build();
     }
 
+    @Override
+    public AiAttendanceResponse markAiAttendance(Long sessionId, MultipartFile file) {
+        AttendanceSession session = attendanceSessionRepository.findById(sessionId)
+                .orElseThrow(()-> new RuntimeException("Attendance session not found with id: " + sessionId));
+
+        if(session.getStatus() == SessionStatus.FINISHED){
+            throw new RuntimeException("Cannot mark attendance. Session is already finished.");
+        }
+
+        if(file == null || file.isEmpty()){
+            throw new RuntimeException("Face image file is required.");
+        }
+
+        AiRecognizeFaceResponse aiResponse = aiFaceService.recognizeFace(file);
+
+        if (aiResponse == null){
+            throw new RuntimeException("AI service did not return any results.");
+        }
+
+        if(aiResponse.getRecognized() == null || !aiResponse.getRecognized()){
+            return AiAttendanceResponse.builder()
+                    .recognized(false)
+                    .studentCode(aiResponse.getStudentCode())
+                    .confidence(aiResponse.getConfidence())
+                    .distance(aiResponse.getDistance())
+                    .message(aiResponse.getMessage())
+                    .attendanceRecord(null)
+                    .build();
+        }
+
+        Student student = studentRepository.findByStudentCode(aiResponse.getStudentCode())
+                .orElseThrow(()-> new RuntimeException("Student not found with id: " + aiResponse.getStudentCode()));
+
+        Optional<AttendanceRecord> existingRecord = attendanceRecordRepository.findBySession_IdAndStudent_Id(sessionId, student.getId());
+
+        if (existingRecord.isPresent()) {
+            return AiAttendanceResponse.builder()
+                    .recognized(true)
+                    .studentCode(student.getStudentCode())
+                    .confidence(aiResponse.getConfidence())
+                    .distance(aiResponse.getDistance())
+                    .message("Attendance already marked for student: " + student.getStudentCode())
+                    .attendanceRecord(mapToResponse(existingRecord.get()))
+                    .build();
+        }
+
+        LocalTime checkInTime = LocalTime.now();
+
+        AttendanceStatus status = calculateAttendanceStatus(session, checkInTime);
+
+        AttendanceRecord attendanceRecord = AttendanceRecord.builder()
+                .session(session)
+                .student(student)
+                .status(status)
+                .checkInTime(checkInTime)
+                .confidenceScore(aiResponse.getConfidence())
+                .markedBy("AI")
+                .build();
+
+        AttendanceRecord savedRecord = attendanceRecordRepository.save(attendanceRecord);
+
+        return AiAttendanceResponse.builder()
+                .recognized(true)
+                .studentCode(aiResponse.getStudentCode())
+                .confidence(aiResponse.getConfidence())
+                .distance(aiResponse.getDistance())
+                .message("Attendance marked successfully.")
+                .attendanceRecord(mapToResponse(savedRecord))
+                .build();
+
+
+
+    }
+
     private AttendanceRecordResponse mapToResponse(AttendanceRecord record) {
         Student student = record.getStudent();
 
@@ -191,7 +267,7 @@ public class AttendanceRecordServiceImpl implements AttendanceRecordService {
 
     private StudentResponse mapStudentToResponse(Student student) {
         return StudentResponse.builder()
-                .id(student.getId())
+                .studentId(student.getId())
                 .studentCode(student.getStudentCode())
                 .name(student.getName())
                 .classSection(student.getClassSection())
